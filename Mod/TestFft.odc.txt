@@ -1,0 +1,76 @@
+MODULE CudaTestFft;
+(**
+	project	= "BlackBox"
+	organization	= "BlackBox Cross-Platform Team"
+	contributors	= "BlackBox Cross-Platform Team"
+	version	= "System/Rsrc/About"
+	copyright	= "System/Rsrc/About"
+	license	= "The 2-Clause BSD License"
+	changes	= "2026-08-18, initial smoke test"
+	issues	= ""
+
+**)
+(** Smoke-тест CudaFft: C2C FFT(4) сигнала [1,2,3,4] ->
+	[(10,0),(-2,2),(-2,0),(-2,-2)].
+	Запуск из консоли:  echo 'CudaTestFft.Go' | ./run-bb64 --console *)
+
+	IMPORT SYSTEM, Console, Strings, CudaRt, CudaFft;
+
+	VAR bad: INTEGER;
+
+	PROCEDURE WriteInt (x: LONGINT);
+		VAR t: ARRAY 40 OF CHAR;
+	BEGIN
+		Strings.IntToString(x, t); Console.WriteStr(t)
+	END WriteInt;
+
+	PROCEDURE CHK (IN s: ARRAY OF CHAR; st: INTEGER);
+	BEGIN
+		IF st # CudaFft.success THEN
+			INC(bad); Console.WriteStr("BAD "); Console.WriteStr(s);
+			Console.WriteStr(" status="); WriteInt(st); Console.WriteLn
+		END
+	END CHK;
+
+	PROCEDURE CHKR (IN s: ARRAY OF CHAR; got, exp: SHORTREAL);
+	BEGIN
+		IF ABS(got - exp) > 0.001 THEN
+			INC(bad); Console.WriteStr("BAD "); Console.WriteStr(s);
+			Console.WriteStr(" got*1000="); WriteInt(ENTIER(got * 1000));
+			Console.WriteStr(" exp*1000="); WriteInt(ENTIER(exp * 1000)); Console.WriteLn
+		END
+	END CHKR;
+
+	PROCEDURE Go*;
+		VAR plan: CudaFft.Plan; ver: INTEGER; dev: CudaRt.DevicePtr;
+			(* cufftComplex = 2 float подряд: re,im,re,im,... *)
+			io: ARRAY 8 OF SHORTREAL;
+	BEGIN
+		bad := 0;
+		CHK("version", CudaFft.cufftGetVersion(ver));
+		Console.WriteStr("cufft version="); WriteInt(ver DIV 1000);
+		Console.WriteStr("."); WriteInt((ver MOD 1000) DIV 10); Console.WriteLn;
+
+		io[0] := 1; io[1] := 0; io[2] := 2; io[3] := 0;
+		io[4] := 3; io[5] := 0; io[6] := 4; io[7] := 0;
+		CHK("malloc", CudaRt.cudaMalloc(dev, LEN(io) * 4));
+		CHK("memcpy H2D", CudaRt.cudaMemcpy(dev, SYSTEM.ADR(io[0]), LEN(io) * 4,
+			CudaRt.memcpyHostToDevice));
+		CHK("plan", CudaFft.cufftPlan1d(plan, 4, CudaFft.typeC2C, 1));
+		CHK("exec", CudaFft.cufftExecC2C(plan, dev, dev, CudaFft.forward));
+		CHK("sync", CudaRt.cudaDeviceSynchronize());
+		CHK("memcpy D2H", CudaRt.cudaMemcpy(SYSTEM.ADR(io[0]), dev, LEN(io) * 4,
+			CudaRt.memcpyDeviceToHost));
+		(* FFT[1,2,3,4] = [(10,0),(-2,2),(-2,0),(-2,-2)] *)
+		CHKR("X0.re", io[0], 10); CHKR("X0.im", io[1], 0);
+		CHKR("X1.re", io[2], -2); CHKR("X1.im", io[3], 2);
+		CHKR("X2.re", io[4], -2); CHKR("X2.im", io[5], 0);
+		CHKR("X3.re", io[6], -2); CHKR("X3.im", io[7], -2);
+		CHK("destroyPlan", CudaFft.cufftDestroy(plan));
+		CHK("free", CudaRt.cudaFree(dev));
+		IF bad = 0 THEN Console.WriteStr("CudaTestFft OK")
+		ELSE Console.WriteStr("CudaTestFft FAILURES") END;
+		Console.WriteLn
+	END Go;
+
+END CudaTestFft.

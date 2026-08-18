@@ -1,0 +1,39 @@
+MODULE CudaFft ["libcufft.so.11"];
+(**
+	project	= "BlackBox"
+	organization	= "BlackBox Cross-Platform Team"
+	contributors	= "BlackBox Cross-Platform Team"
+	version	= "System/Rsrc/About"
+	copyright	= "System/Rsrc/About"
+	license	= "The 2-Clause BSD License"
+	changes	= "2026-08-18, initial amd64 binding"
+	issues	= ""
+
+**)
+(** Биндинги cuFFT по cufft.h (CUDA 12), SysV amd64.
+	cufftHandle = int (НЕ указатель!). cufftComplex = 2 float подряд. *)
+
+	CONST
+		success* = 0;	(* CUFFT_SUCCESS *)
+
+		(* cufftType *)
+		typeR2C* = 02AH;
+		typeC2R* = 02CH;
+		typeC2C* = 029H;
+
+		(* направление *)
+		forward* = -1;
+		inverse* = 1;
+
+	TYPE
+		Status* = INTEGER;
+		Plan* = INTEGER;	(* cufftHandle = int *)
+		DevicePtr* = LONGINT;
+
+	PROCEDURE [ccall] cufftPlan1d* (VAR plan: Plan; nx, type, batch: INTEGER): Status;
+	PROCEDURE [ccall] cufftDestroy* (plan: Plan): Status;
+	PROCEDURE [ccall] cufftGetVersion* (VAR version: INTEGER): Status;
+	PROCEDURE [ccall] cufftExecC2C* (plan: Plan; idata, odata: DevicePtr;
+		direction: INTEGER): Status;
+
+END CudaFft.
