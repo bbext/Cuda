@@ -1,6 +1,10 @@
-Mod/Rt.odc.txt
-Mod/Util.odc.txt
-Mod/Test.odc.txt
-Docu/Quick-Start.odc.txt
-Docu/Compile-List.odc.txt
-Docu/Coder-List.odc.txt
+Cuda/Docu/Coder-List.odc
+Cuda/Docu/Compile-List.odc
+Cuda/Docu/Quick-Start.odc
+Cuda/Mod/Blas.odc
+Cuda/Mod/Fft.odc
+Cuda/Mod/Rt.odc
+Cuda/Mod/Test.odc
+Cuda/Mod/TestBlas.odc
+Cuda/Mod/TestFft.odc
+Cuda/Mod/Util.odc
