@@ -14,27 +14,37 @@ MODULE CudaTest;
 	round-trip памяти host -> device -> host с проверкой данных.
 	Запуск из консоли:  echo 'CudaTest.Go' | ./run-bb64 --console *)
 
-	IMPORT SYSTEM, Console, Strings, CudaRt, CudaUtil;
+	IMPORT SYSTEM, Console, Log, Strings, CudaRt, CudaUtil;
 
 	CONST
 		chunk = 1024 * 1024;	(* 1 МБ *)
 
 	VAR bad: INTEGER;
 
+	PROCEDURE WriteStr (IN s: ARRAY OF CHAR);
+	BEGIN
+		Console.WriteStr(s); Log.String(s)
+	END WriteStr;
+
+	PROCEDURE WriteLn;
+	BEGIN
+		Console.WriteLn; Log.Ln
+	END WriteLn;
+
 	PROCEDURE WriteInt (x: LONGINT);
 		VAR t: ARRAY 40 OF CHAR;
 	BEGIN
-		Strings.IntToString(x, t); Console.WriteStr(t)
+		Strings.IntToString(x, t); WriteStr(t)
 	END WriteInt;
 
 	PROCEDURE CHK (IN s: ARRAY OF CHAR; err: CudaRt.Error);
 		VAR t: ARRAY 128 OF CHAR;
 	BEGIN
 		IF err # CudaRt.success THEN
-			INC(bad); Console.WriteStr("BAD "); Console.WriteStr(s);
-			Console.WriteStr(" err="); WriteInt(err);
-			CudaUtil.ErrorText(err, t); Console.WriteStr(" ("); Console.WriteStr(t);
-			Console.WriteStr(")"); Console.WriteLn
+			INC(bad); WriteStr("BAD "); WriteStr(s);
+			WriteStr(" err="); WriteInt(err);
+			CudaUtil.ErrorText(err, t); WriteStr(" ("); WriteStr(t);
+			WriteStr(")"); WriteLn
 		END
 	END CHK;
 
@@ -62,13 +72,13 @@ MODULE CudaTest;
 				INC(i)
 			END;
 			IF badN > 0 THEN
-				Console.WriteStr("size="); WriteInt(size);
-				Console.WriteStr(" firstBad="); WriteInt(firstBad);
-				Console.WriteStr(" badN="); WriteInt(badN); Console.WriteLn
+				WriteStr("size="); WriteInt(size);
+				WriteStr(" firstBad="); WriteInt(firstBad);
+				WriteStr(" badN="); WriteInt(badN); WriteLn
 			END;
 			CHK("free", CudaRt.cudaFree(dev))
 		ELSE
-			INC(badN); Console.WriteStr("BAD malloc returned 0"); Console.WriteLn
+			INC(badN); WriteStr("BAD malloc returned 0"); WriteLn
 		END;
 		RETURN badN
 	END RoundTrip;
@@ -81,32 +91,32 @@ MODULE CudaTest;
 		bad := 0;
 		CHK("runtimeVersion", CudaRt.cudaRuntimeGetVersion(rt));
 		CHK("driverVersion", CudaRt.cudaDriverGetVersion(drv));
-		Console.WriteStr("cuda runtime="); WriteInt(rt DIV 1000);
-		Console.WriteStr("."); WriteInt((rt MOD 1000) DIV 10);
-		Console.WriteStr(" driver="); WriteInt(drv DIV 1000);
-		Console.WriteStr("."); WriteInt((drv MOD 1000) DIV 10); Console.WriteLn;
+		WriteStr("cuda runtime="); WriteInt(rt DIV 1000);
+		WriteStr("."); WriteInt((rt MOD 1000) DIV 10);
+		WriteStr(" driver="); WriteInt(drv DIV 1000);
+		WriteStr("."); WriteInt((drv MOD 1000) DIV 10); WriteLn;
 
 		CHK("getDeviceCount", CudaRt.cudaGetDeviceCount(count));
-		Console.WriteStr("devices="); WriteInt(count); Console.WriteLn;
+		WriteStr("devices="); WriteInt(count); WriteLn;
 		IF count < 1 THEN
-			INC(bad); Console.WriteStr("BAD no CUDA devices"); Console.WriteLn
+			INC(bad); WriteStr("BAD no CUDA devices"); WriteLn
 		ELSE
 			CHK("setDevice", CudaRt.cudaSetDevice(0));
 			CHK("deviceName", CudaUtil.DeviceName(0, name));
-			Console.WriteStr("dev0: "); Console.WriteStr(name); Console.WriteLn;
+			WriteStr("dev0: "); WriteStr(name); WriteLn;
 			CHK("memGetInfo", CudaRt.cudaMemGetInfo(free, total));
-			Console.WriteStr("mem free="); WriteInt(free DIV (1024 * 1024));
-			Console.WriteStr("MB total="); WriteInt(total DIV (1024 * 1024));
-			Console.WriteStr("MB"); Console.WriteLn;
-			IF total <= 0 THEN INC(bad); Console.WriteStr("BAD mem total=0"); Console.WriteLn END;
+			WriteStr("mem free="); WriteInt(free DIV (1024 * 1024));
+			WriteStr("MB total="); WriteInt(total DIV (1024 * 1024));
+			WriteStr("MB"); WriteLn;
+			IF total <= 0 THEN INC(bad); WriteStr("BAD mem total=0"); WriteLn END;
 
 			bad := bad + RoundTrip(4096);
 			bad := bad + RoundTrip(65536);
 			bad := bad + RoundTrip(chunk)
 		END;
-		IF bad = 0 THEN Console.WriteStr("CudaTest OK")
-		ELSE Console.WriteStr("CudaTest FAILURES") END;
-		Console.WriteLn
+		IF bad = 0 THEN WriteStr("CudaTest OK")
+		ELSE WriteStr("CudaTest FAILURES") END;
+		WriteLn
 	END Go;
 
 END CudaTest.
