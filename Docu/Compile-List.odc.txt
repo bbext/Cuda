@@ -1,2 +1,2 @@
-DevCompiler64.CompileThis
-	CudaRt CudaUtil CudaTest
+<odc-view type="DevCommanders.StdView" w="204561" h="179161" data="gvFEZXZDb21tYW5kZXJzLlN0ZFZpZXdEZXNjAPFEZXZDb21tYW5kZXJzLlZpZXdEZXNjAPFWaWV3cy5WaWV3RGVzYwDwU3RvcmVzLlN0b3JlRGVzYwAAAAAAAAAAAAAAAAAGAAAAAAAAFQAA"/>DevCompiler.CompileThis CudaRt CudaUtil CudaTest CudaBlas CudaFft CudaTestBlas CudaTestFft
+	 <odc-view type="DevCommanders.StdEndView" w="88900" h="152400" data="gvFEZXZDb21tYW5kZXJzLlN0ZEVuZFZpZXdEZXNjAPFEZXZDb21tYW5kZXJzLkVuZFZpZXdEZXNjAPFWaWV3cy5WaWV3RGVzYwDwU3RvcmVzLlN0b3JlRGVzYwAAAAAAAAAAAAAAAAACAAAAAAA="/>
