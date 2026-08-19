@@ -10,25 +10,25 @@ MODULE CudaTest;
 	issues	= ""
 
 **)
-(** Smoke-тест биндингов CudaRt: версии, список устройств,
-	round-trip памяти host -> device -> host с проверкой данных.
-	Запуск из консоли:  echo 'CudaTest.Go' | ./run-bb64 --console *)
+(** Smoke test of CudaRt bindings: runtime/driver versions, device list,
+	host -> device -> host round-trip memory copy with data verification.
+	Run from console:  echo 'CudaTest.Go' | ./run-bb64 --console *)
 
-	IMPORT SYSTEM, Console, Log, Strings, CudaRt, CudaUtil;
+	IMPORT SYSTEM, Console, StdLog, Strings, CudaRt, CudaUtil;
 
 	CONST
-		chunk = 1024 * 1024;	(* 1 МБ *)
+		chunk = 1024 * 1024;	(* 1 MiB *)
 
 	VAR bad: INTEGER;
 
 	PROCEDURE WriteStr (IN s: ARRAY OF CHAR);
 	BEGIN
-		Console.WriteStr(s); Log.String(s)
+		Console.WriteStr(s); StdLog.String(s)
 	END WriteStr;
 
 	PROCEDURE WriteLn;
 	BEGIN
-		Console.WriteLn; Log.Ln
+		Console.WriteLn; StdLog.Ln
 	END WriteLn;
 
 	PROCEDURE WriteInt (x: LONGINT);
@@ -57,11 +57,11 @@ MODULE CudaTest;
 		IF dev # 0 THEN
 			NEW(host, size);
 			i := 0; WHILE i < size DO host[i] := SHORT(CHR(1 + i MOD 250)); INC(i) END;
-			adr := SYSTEM.ADR(host[0]);	(* ADR(elem0) = данные; VAL(LONGINT, host) указывает на хедер! *)
+			adr := SYSTEM.ADR(host[0]);	(* ADR(element 0) = data; VAL(LONGINT, host) points to header! *)
 			CHK("memset", CudaRt.cudaMemset(dev, 0, size));
 			CHK("memcpy H2D", CudaRt.cudaMemcpy(dev, adr, size, CudaRt.memcpyHostToDevice));
 			i := 0; WHILE i < size DO host[i] := 0X; INC(i) END;
-			CHK("memcpy D2H", CudaRt.cudaMemcpy(adr, dev, size, CudaRt.memcpyDeviceToHost));
+			CHK("memcpy D2H", CudaRt.cudaMemcpy(adr, dev, size, CudaRt.cudaMemcpyDeviceToHost));
 			CHK("sync", CudaRt.cudaDeviceSynchronize());
 			i := 0; firstBad := -1;
 			WHILE i < size DO
